@@ -1,11 +1,13 @@
 # Main executable file
 PROGRAM = SDLSample
 
-# Directory containing library portions of code.
+# Directory containing include files.
 INCLUDEDIR = /usr/include/SDL2/
 
 # Object files
 OBJECTS = Main.o
+
+# Library directory.
 LIBDIR = /usr/lib/
 
 CXX = g++
