@@ -1,0 +1,50 @@
+# Compiled Object files
+*.slo
+*.lo
+*.obj
+*.o
+
+# Build results
+[Dd]ebug/
+[Rr]elease/
+x64/
+*.ilk
+*.meta
+*.obj
+*.pch
+*.pdb
+*.sbr
+*.tmp
+*.log
+*.vspscc
+*.vssscc
+.builds
+
+# Compiled Dynamic libraries
+*.so
+*.dylib
+
+# Compiled Static libraries
+*.lai
+*.la
+*.a
+
+# User-specific files
+*.suo
+*.user
+*.sln.docstates
+
+# Visual Studio profiler
+*.psess
+*.vsp
+*.vspx
+
+# Visual C++ cache files
+ipch/
+*.aps
+*.ncb
+*.opensdf
+*.sdf
+
+# Lock Files
+*.odp#
