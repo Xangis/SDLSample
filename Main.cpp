@@ -1,15 +1,74 @@
+// Always necessary.
 #include "SDL.h"
+// Gives us image loading support
 #include "SDL_image.h"
+// Gives us audio playback support. We're only using .WAV files, but we could play
+// Ogg, MP3, FLAC, MOD, or even MIDI files.
 #include "SDL_mixer.h"
+// Adds keyboard event processing.
 #include "SDL_keyboard.h"
+// Adds mouse event handling.
 #include "SDL_mouse.h"
+// Adds true-type font rendering.
 #include "SDL_ttf.h"
+// So we can use cout for debugging.
 #include <iostream>
+
+using namespace std;
+
+bool InitializeSDL()
+{
+    // Initialize SDL
+    int initResult = SDL_Init(SDL_INIT_EVERYTHING);
+    if( initResult )
+    {
+        cout << "Failed to initialize SDL: " << SDL_GetError() << endl;
+        return false;
+    }
+    // Initialize image support.
+    initResult = IMG_Init(IMG_INIT_PNG);
+    if( !initResult )
+    {
+        cout << "Failed to initialize PNG support: " << IMG_GetError() << endl;
+        return false;
+    }
+    // Initialize TTF font support.
+    initResult = TTF_Init();
+    if( initResult )
+    {
+        cout << "Failed to initialize TTF support: " << TTF_GetError() << endl;
+        return false;
+    }
+    // Initialize mixer support.
+    initResult = Mix_Init(0);
+    if( initResult )
+    {
+        cout << "Failed to initialize audio mixer: " << Mix_GetError() << endl;
+        return false;
+    }
+    // Set up the audio stream as 44.1 KHz, 2-channel, 1024-byte buffer.
+    int result = Mix_OpenAudio(44100, AUDIO_S16SYS, 2, 1024);
+    if( result < 0 )
+    {
+        cout << "Unable to open audio: " << Mix_GetError() << endl;
+        return false;
+    }
+    // Create 4 audio channels so we can have up to 4 sounds playing at once.
+    result = Mix_AllocateChannels(4);
+    if( result < 0 )
+    {
+        cout << "Unable to allocate mixing channels: " << Mix_GetError() << endl;
+        return false;
+    }
+    return true;
+}
 
 int main(int argc, char* argv[])
 {
-    // A surface represents the drawing area of a window, or a surface containing
-    // loaded image data.
+    // Variables to keep track of our magic and life points.
+    int magics = 200;
+    int lifes = 200;
+    // Declare a TON of variables for our textures and surfaces.
     SDL_Window* mainWindow;
     SDL_Surface* mon1;
     SDL_Surface* bk1;
@@ -24,8 +83,7 @@ int main(int argc, char* argv[])
     SDL_Texture* activeBackground;
     SDL_Texture* lifeMeter;
     SDL_Texture* magicMeter;
-    int magics = 200;
-    int lifes = 200;
+    // Drawing location for life meter, magic meter, and monster image.
     SDL_Rect lifeRect;
     lifeRect.x = 20;
     lifeRect.y = 50;
@@ -42,49 +100,37 @@ int main(int argc, char* argv[])
     monsterRect.w = 600;
     monsterRect.h = 456;
     SDL_Renderer* renderer;
+    // Font variables.
     TTF_Font* font;
-    SDL_Color color = { 224, 224, 192 };
-    // Initialize everything. A sane developer would check the return value.
-    SDL_Init(SDL_INIT_EVERYTHING);
-    int initResult = IMG_Init(IMG_INIT_PNG);
-    if( !initResult )
+    SDL_Color color = { 255, 192, 128 };
+
+    // Activate our libraries.
+    if( !InitializeSDL() )
     {
-        std::cout << "Failed to init PNG: " << IMG_GetError() << std::endl;
-    }
-    initResult = TTF_Init();
-    if( initResult )
-    {
-        std::cout << "Failed to initialize TTF support: " << TTF_GetError() << std::endl;
-    }
-    initResult = Mix_Init(0);
-    if( initResult )
-    {
-        std::cout << "Failed to initialize WAV file support: " << Mix_GetError() << std::endl;
-    }
-    // Set up the audio stream
-    int result = Mix_OpenAudio(44100, AUDIO_S16SYS, 2, 512);
-    if( result < 0 )
-    {
-        fprintf(stderr, "Unable to open audio: %s\n", SDL_GetError());
-        exit(-1);
-    }
-    result = Mix_AllocateChannels(4);
-    if( result < 0 )
-    {
-        fprintf(stderr, "Unable to allocate mixing channels: %s\n", SDL_GetError());
+        cout << "I give up." << endl;
         exit(-1);
     }
 
     // Create the main window. A sane developer would check the return value.
     mainWindow = SDL_CreateWindow("SDL Sample", 10, 10, 1280, 800, SDL_WINDOW_SHOWN);
+    if( mainWindow == NULL )
+    {
+        cout << "Failed to create main window." << endl;
+        exit(-1);
+    }
     // Create the renderer as a hardware-accelerated flicker-free renderer.
     renderer = SDL_CreateRenderer(mainWindow, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
-    std::cout << renderer << std::endl;
+    if( renderer == NULL )
+    {
+        cout << "failed to create the renderer" << endl;
+        exit(-1);
+    }
+
     // Load image resources.
     bk1 = IMG_Load("Background1.png");
     if( !bk1 )
     {
-        std::cout << "Background1.png - IMG_Load: " << IMG_GetError() << std::endl;
+        cout << "Background1.png - IMG_Load: " << IMG_GetError() << endl;
     }
     background1 = SDL_CreateTextureFromSurface(renderer, bk1);
     SDL_FreeSurface(bk1);
@@ -94,10 +140,10 @@ int main(int argc, char* argv[])
     mon1 = IMG_Load("Monster.png");
     if( !mon1 )
     {
-        std::cout << "Monster.png - IMG_Load: " << IMG_GetError() << std::endl;
+        cout << "Monster.png - IMG_Load: " << IMG_GetError() << endl;
     }
     monster = SDL_CreateTextureFromSurface(renderer, mon1);
-    std::cout << monster << std::endl;
+    cout << monster << endl;
     SDL_FreeSurface(mon1);
     life1 = IMG_Load("Life.png");
     lifeMeter = SDL_CreateTextureFromSurface(renderer, life1);
@@ -105,10 +151,11 @@ int main(int argc, char* argv[])
     magic1 = IMG_Load("Magic.png");
     magicMeter = SDL_CreateTextureFromSurface(renderer, magic1);
     SDL_FreeSurface(magic1);
+    // Load font and create text resources.
     font = TTF_OpenFont("FreeSans.ttf", 28);
     if( !font )
     {
-        std::cout << "Failed to load font: " << TTF_GetError() << std::endl;
+        cout << "Failed to load font: " << TTF_GetError() << endl;
     }
     SDL_Surface* healthText = TTF_RenderText_Blended(font, "Healths", color);
     SDL_Surface* magicText = TTF_RenderText_Blended(font, "Magicks", color);
@@ -125,6 +172,7 @@ int main(int argc, char* argv[])
     SDL_FreeSurface(attackText);
     SDL_FreeSurface(makeMagicText);
     SDL_FreeSurface(runAwayText);
+    // Create locations for text drawing.
     SDL_Rect healthRect;
     healthRect.x = 40;
     healthRect.y = 10;
@@ -150,9 +198,11 @@ int main(int argc, char* argv[])
     runAwayTRect.y = 700;
     runAwayTRect.w = 180;
     runAwayTRect.h = 50;
+    // Load our sound effects.
     Mix_Chunk* attackSound = Mix_LoadWAV("Attack.wav");
     Mix_Chunk* magicSound = Mix_LoadWAV("Magic.wav");
 
+    // Main run loop. Handles keyboard, mouse, and quit events.
     bool quit = false;
     SDL_Event e;
     while( !quit )
@@ -172,16 +222,16 @@ int main(int argc, char* argv[])
                         quit = true;
                 }
             }
-            // Quit if user clicks the mouse
 	        else if (e.type == SDL_MOUSEBUTTONDOWN)
             {
                 int x = ((SDL_MouseButtonEvent*)&e)->x;
                 int y = ((SDL_MouseButtonEvent*)&e)->y;
-                std::cout << "Mouse: X is " << x << ", Y is " << y << std::endl;
+                cout << "Mouse: X is " << x << ", Y is " << y << endl;
                 if( x > attackTRect.x && x < (attackTRect.x + attackTRect.w) &&
                     y > attackTRect.y && y < (attackTRect.y + attackTRect.h))
                 {
-                    std::cout << "The attack button was clicked" << std::endl;
+                    // Attacking just means the monster bites you and you lose health.
+                    cout << "The attack button was clicked" << endl;
                     Mix_PlayChannel(-1, attackSound, 0);
                     if( lifes > 0 )
                     {
@@ -196,7 +246,8 @@ int main(int argc, char* argv[])
                 if( x > makeMagicTRect.x && x < (makeMagicTRect.x + makeMagicTRect.w) &&
                     y > makeMagicTRect.y && y < (makeMagicTRect.y + makeMagicTRect.h))
                 {
-                    std::cout << "The make magic button was clicked" << std::endl;
+                    // Using magic heals you, increasing your life meter.
+                    cout << "The make magic button was clicked" << endl;
                     Mix_PlayChannel(-1, magicSound, 0);
                     if( magics > 0 )
                     {
@@ -220,15 +271,19 @@ int main(int argc, char* argv[])
                 if( x > runAwayTRect.x && x < (runAwayTRect.x + runAwayTRect.w) &&
                     y > runAwayTRect.y && y < (runAwayTRect.y + runAwayTRect.h))
                 {
-                    std::cout << "The run away button was clicked" << std::endl;
+                    // The monster is faster than you, so running away just changes the scenery.
+                    cout << "The run away button was clicked" << endl;
                     if( activeBackground == background3 ) activeBackground = background1;
                     else if( activeBackground == background2 ) activeBackground = background3;
                     else if( activeBackground == background1 ) activeBackground = background2;
                 }
             }
         }
+        // Clear the scene.
         SDL_RenderClear(renderer);
+        // Draw the background.
         SDL_RenderCopy(renderer, activeBackground, NULL, NULL);
+        // Draw our sprites and text over the top of the background.
         SDL_RenderCopy(renderer, lifeMeter, NULL, &lifeRect);
         SDL_RenderCopy(renderer, magicMeter, NULL, &magicRect);
         SDL_RenderCopy(renderer, monster, NULL, &monsterRect);
@@ -237,10 +292,10 @@ int main(int argc, char* argv[])
         SDL_RenderCopy(renderer, attackTxt, NULL, &attackTRect);
         SDL_RenderCopy(renderer, makeMagicTxt, NULL, &makeMagicTRect);
         SDL_RenderCopy(renderer, runAwayTxt, NULL, &runAwayTRect);
+        // Show the finished scene.
         SDL_RenderPresent(renderer);
     }
-
-    //SDL_BlitSurface(background, NULL, mainWindow, NULL);
+    // Texture cleanup.
     SDL_DestroyTexture(monster);
     SDL_DestroyTexture(background1);
     SDL_DestroyTexture(background2);
@@ -253,8 +308,9 @@ int main(int argc, char* argv[])
     SDL_DestroyTexture(makeMagicTxt);
     SDL_DestroyTexture(healthTxt);
     SDL_DestroyRenderer(renderer);
-    SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(mainWindow);
+    Mix_Quit();
+    TTF_Quit();
     IMG_Quit();
     SDL_Quit();
     return 0;
