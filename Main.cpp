@@ -208,6 +208,7 @@ int main(int argc, char* argv[])
     notificationRect.y = 744;
     notificationRect.w = 900;
     notificationRect.h = 44;
+    // Done with intermediate surfaces for text.
     SDL_FreeSurface(healthText);
     SDL_FreeSurface(magicText);
     SDL_FreeSurface(attackText);
@@ -266,7 +267,7 @@ int main(int argc, char* argv[])
                 if( x > makeMagicTRect.x && x < (makeMagicTRect.x + makeMagicTRect.w) &&
                     y > makeMagicTRect.y && y < (makeMagicTRect.y + makeMagicTRect.h))
                 {
-                    // Using magic heals you, increasing your life meter.
+                    // Using magic heals you if your magic isn't empty, enlarging your health meter.
                     cout << "The make magic button was clicked" << endl;
                     Mix_PlayChannel(-1, magicSound, 0);
                     if( magics > 0 )
@@ -298,6 +299,7 @@ int main(int argc, char* argv[])
                 {
                     // The monster is faster than you, so running away just changes the scenery.
                     cout << "The run away button was clicked" << endl;
+                    // Switch background to new scenery.
                     if( activeBackground == background3 ) activeBackground = background1;
                     else if( activeBackground == background2 ) activeBackground = background3;
                     else if( activeBackground == background1 ) activeBackground = background2;
@@ -344,6 +346,7 @@ int main(int argc, char* argv[])
     SDL_DestroyTexture(fleeResultTxt);
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(mainWindow);
+    // Uninitialize libraries.
     Mix_Quit();
     TTF_Quit();
     IMG_Quit();
