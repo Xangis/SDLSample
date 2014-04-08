@@ -134,8 +134,10 @@ int main(int argc, char* argv[])
     }
     background1 = SDL_CreateTextureFromSurface(renderer, bk1);
     SDL_FreeSurface(bk1);
-    background2 = SDL_CreateTextureFromSurface(renderer, IMG_Load("Background2.png"));
-    background3 = SDL_CreateTextureFromSurface(renderer, IMG_Load("Background3.png"));
+    bk2 = IMG_Load("Background2.png");
+    background2 = SDL_CreateTextureFromSurface(renderer, bk2);
+    bk3 = IMG_Load("Background3.png");
+    background3 = SDL_CreateTextureFromSurface(renderer, bk3);
     activeBackground = background1;
     mon1 = IMG_Load("Monster.png");
     if( !mon1 )
@@ -161,11 +163,20 @@ int main(int argc, char* argv[])
     SDL_Surface* attackText = TTF_RenderText_Blended(font, "Whap the monster", color);
     SDL_Surface* makeMagicText = TTF_RenderText_Blended(font, "Make magicks", color);
     SDL_Surface* runAwayText = TTF_RenderText_Blended(font, "Run aways!", color);
+    SDL_Surface* attackResultText = TTF_RenderText_Blended(font, "You try to whap the monster but it bited you. You are ouched for 10 healths.", color);
+    SDL_Surface* magicResultText = TTF_RenderText_Blended(font, "You use some magicks and make your healths feel a little better.", color);
+    SDL_Surface* nomagicResultText = TTF_RenderText_Blended(font, "You is out of magicks and cannot make your healths feel better.", color);
+    SDL_Surface* fleeResultText = TTF_RenderText_Blended(font, "You try to run away, but the monster followed you to the new place.", color);
     SDL_Texture* healthTxt = SDL_CreateTextureFromSurface(renderer, healthText);
     SDL_Texture* magicTxt = SDL_CreateTextureFromSurface(renderer, magicText);
     SDL_Texture* attackTxt = SDL_CreateTextureFromSurface(renderer, attackText);
     SDL_Texture* makeMagicTxt = SDL_CreateTextureFromSurface(renderer, makeMagicText);
     SDL_Texture* runAwayTxt = SDL_CreateTextureFromSurface(renderer, runAwayText);
+    SDL_Texture* attackResultTxt = SDL_CreateTextureFromSurface(renderer, attackResultText);
+    SDL_Texture* magicResultTxt = SDL_CreateTextureFromSurface(renderer, magicResultText);
+    SDL_Texture* nomagicResultTxt = SDL_CreateTextureFromSurface(renderer, magicResultText);
+    SDL_Texture* fleeResultTxt = SDL_CreateTextureFromSurface(renderer, fleeResultText);
+    SDL_Texture* currentNotificationText = NULL;
     // Create locations for text drawing.
     SDL_Rect healthRect;
     healthRect.x = 20;
@@ -192,11 +203,20 @@ int main(int argc, char* argv[])
     runAwayTRect.y = 700;
     runAwayTRect.w = runAwayText->w;
     runAwayTRect.h = runAwayText->h;
+    SDL_Rect notificationRect;
+    notificationRect.x = 200;
+    notificationRect.y = 744;
+    notificationRect.w = 900;
+    notificationRect.h = 44;
     SDL_FreeSurface(healthText);
     SDL_FreeSurface(magicText);
     SDL_FreeSurface(attackText);
     SDL_FreeSurface(makeMagicText);
     SDL_FreeSurface(runAwayText);
+    SDL_FreeSurface(attackResultText);
+    SDL_FreeSurface(magicResultText);
+    SDL_FreeSurface(nomagicResultText);
+    SDL_FreeSurface(fleeResultText);
     // Load our sound effects.
     Mix_Chunk* attackSound = Mix_LoadWAV("Attack.wav");
     Mix_Chunk* magicSound = Mix_LoadWAV("Magic.wav");
@@ -241,6 +261,7 @@ int main(int argc, char* argv[])
                         lifes = 0;
                     }
                     lifeRect.w = lifes;
+                    currentNotificationText = attackResultTxt;
                 }
                 if( x > makeMagicTRect.x && x < (makeMagicTRect.x + makeMagicTRect.w) &&
                     y > makeMagicTRect.y && y < (makeMagicTRect.y + makeMagicTRect.h))
@@ -251,18 +272,23 @@ int main(int argc, char* argv[])
                     if( magics > 0 )
                     {
                         magics -= 10;
+                        if( lifes < 200 )
+                        {
+                            lifes += 10;
+                        }
+                        if( lifes > 200 )
+                        {
+                            lifes = 200;
+                        }
+                        currentNotificationText = magicResultTxt;
                     }
-                    if( magics < 0 )
+                    else
                     {
-                        magics = 0;
-                    }
-                    if( lifes < 200 )
-                    {
-                        lifes += 10;
-                    }
-                    if( lifes > 200 )
-                    {
-                        lifes = 200;
+                        currentNotificationText = nomagicResultTxt;
+                        if( magics < 0 )
+                        {
+                            magics = 0;
+                        }
                     }
                     magicRect.w = magics;
                     lifeRect.w = lifes;
@@ -275,6 +301,7 @@ int main(int argc, char* argv[])
                     if( activeBackground == background3 ) activeBackground = background1;
                     else if( activeBackground == background2 ) activeBackground = background3;
                     else if( activeBackground == background1 ) activeBackground = background2;
+                    currentNotificationText = fleeResultTxt;
                 }
             }
         }
@@ -291,6 +318,11 @@ int main(int argc, char* argv[])
         SDL_RenderCopy(renderer, attackTxt, NULL, &attackTRect);
         SDL_RenderCopy(renderer, makeMagicTxt, NULL, &makeMagicTRect);
         SDL_RenderCopy(renderer, runAwayTxt, NULL, &runAwayTRect);
+        // If there are any notifications, draw them too.
+        if( currentNotificationText != NULL )
+        {
+            SDL_RenderCopy(renderer, currentNotificationText, NULL, &notificationRect);
+        }
         // Show the finished scene.
         SDL_RenderPresent(renderer);
     }
@@ -306,6 +338,10 @@ int main(int argc, char* argv[])
     SDL_DestroyTexture(attackTxt);
     SDL_DestroyTexture(makeMagicTxt);
     SDL_DestroyTexture(healthTxt);
+    SDL_DestroyTexture(attackResultTxt);
+    SDL_DestroyTexture(magicResultTxt);
+    SDL_DestroyTexture(nomagicResultTxt);
+    SDL_DestroyTexture(fleeResultTxt);
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(mainWindow);
     Mix_Quit();
