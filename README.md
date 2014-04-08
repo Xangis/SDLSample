@@ -14,3 +14,7 @@ operating systems.
 Slides were created with LibreOffice and are in the Presentation folder.
 
 All .WAV files and images were created by the author and are also licensed under the MIT license.
+The lion cub was photographed at the Oregon Zoo and the backgrounds were photographed near
+Scappoose, OR along route 30.
+
+The FreeMono.ttf font comes from GNU FreeFont, here: https://www.gnu.org/software/freefont/
