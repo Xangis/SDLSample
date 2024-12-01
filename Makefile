@@ -20,7 +20,7 @@ CXX = g++
 all: $(PROGRAM)
 
 $(PROGRAM): $(OBJECTS)
-	$(CXX) -o $(PROGRAM) -L$(LIBDIR) $(OBJECTS) -lSDL2 -lSDLmain -lSDL2_image -lSDL2_ttf -lSDL2_mixer -lrt
+	$(CXX) -o $(PROGRAM) -L$(LIBDIR) $(OBJECTS) -lSDL2 -lSDL2_image -lSDL2_ttf -lSDL2_mixer -lrt
 
 clean:
 	rm -f *.o $(PROGRAM)

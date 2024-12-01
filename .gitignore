@@ -19,6 +19,7 @@ x64/
 *.vspscc
 *.vssscc
 .builds
+SDLSample
 
 # Compiled Dynamic libraries
 *.so
