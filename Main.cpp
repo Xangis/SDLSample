@@ -1,4 +1,5 @@
 // Always necessary.
+#define SDL_MAIN_HANDLED
 #include "SDL.h"
 // Gives us image loading support
 #include "SDL_image.h"
